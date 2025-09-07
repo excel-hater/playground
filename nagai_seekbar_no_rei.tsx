@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import { View, StyleSheet, Text } from "react-native";
 import Slider from "@react-native-community/slider";
+import Svg, { Path } from "react-native-svg";
 
 const SegmentedSeekBar = ({ duration, position, onSeek }) => {
   const segments = 4;
   const segmentLength = duration / segments;
 
-  // 各セグメントの値 (0〜1) を計算
   const getSegmentValue = (index: number) => {
     const segStart = index * segmentLength;
     const segEnd = (index + 1) * segmentLength;
@@ -15,7 +15,6 @@ const SegmentedSeekBar = ({ duration, position, onSeek }) => {
     return (position - segStart) / segmentLength;
   };
 
-  // ユーザー操作時に絶対時間に換算
   const handleChange = (value: number, index: number) => {
     const absolutePos = index * segmentLength + value * segmentLength;
     onSeek(absolutePos);
@@ -24,23 +23,48 @@ const SegmentedSeekBar = ({ duration, position, onSeek }) => {
   return (
     <View style={styles.container}>
       {Array.from({ length: segments }).map((_, i) => (
-        <View
-          key={i}
-          style={[
-            styles.sliderContainer,
-            i % 2 === 1 ? { transform: [{ rotate: "180deg" }] } : null,
-          ]}
-        >
-          <Slider
-            style={styles.slider}
-            minimumValue={0}
-            maximumValue={1}
-            value={getSegmentValue(i)}
-            onSlidingComplete={(v) => handleChange(v, i)}
-            minimumTrackTintColor="#4CAF50"
-            maximumTrackTintColor="#ccc"
-            thumbTintColor="#4CAF50"
-          />
+        <View key={i} style={{ alignItems: "stretch" }}>
+          {/* スライダー */}
+          <View
+            style={[
+              styles.sliderContainer,
+              i % 2 === 1 ? { transform: [{ rotate: "180deg" }] } : null,
+            ]}
+          >
+            <Slider
+              style={styles.slider}
+              minimumValue={0}
+              maximumValue={1}
+              value={getSegmentValue(i)}
+              onSlidingComplete={(v) => handleChange(v, i)}
+              minimumTrackTintColor="#4CAF50"
+              maximumTrackTintColor="#ccc"
+              thumbTintColor="#4CAF50"
+            />
+          </View>
+
+          {/* 下にカーブを描画（最後のバー以外） */}
+          {i < segments - 1 && (
+            <Svg height="30" width="100%">
+              {i % 2 === 0 ? (
+                // 右端から下へカーブ
+                <Path
+                  d="M100,0 C100,0 100,30 100,30"
+                  stroke="#4CAF50"
+                  strokeWidth="4"
+                  fill="none"
+                />
+              ) : (
+                // 左端から下へカーブ
+                <Path
+                  d="M0,0 C0,0 0,30 0,30"
+                  stroke="#4CAF50"
+                  strokeWidth="4"
+                  fill="none"
+                />
+              )}
+            </Svg>
+          )}
         </View>
       ))}
     </View>
@@ -68,7 +92,7 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flexDirection: "column",
-    gap: 10,
+    gap: 0,
   },
   sliderContainer: {
     flexDirection: "row",
