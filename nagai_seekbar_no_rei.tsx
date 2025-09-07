@@ -1,11 +1,13 @@
-import React, { useState } from "react";
-import { View, StyleSheet, Text } from "react-native";
+import React, { useRef, useState } from "react";
+import { View, StyleSheet, Text, Dimensions } from "react-native";
+import Video from "react-native-video";
 import Slider from "@react-native-community/slider";
 import Svg, { Path } from "react-native-svg";
 
 const SegmentedSeekBar = ({ duration, position, onSeek }) => {
   const segments = 4;
   const segmentLength = duration / segments;
+  const screenWidth = Dimensions.get("window").width;
 
   const getSegmentValue = (index: number) => {
     const segStart = index * segmentLength;
@@ -21,9 +23,9 @@ const SegmentedSeekBar = ({ duration, position, onSeek }) => {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={styles.seekContainer}>
       {Array.from({ length: segments }).map((_, i) => (
-        <View key={i} style={{ alignItems: "stretch" }}>
+        <View key={i}>
           {/* スライダー */}
           <View
             style={[
@@ -43,21 +45,19 @@ const SegmentedSeekBar = ({ duration, position, onSeek }) => {
             />
           </View>
 
-          {/* 下にカーブを描画（最後のバー以外） */}
+          {/* 折れ曲がりカーブ（最後のバー以外） */}
           {i < segments - 1 && (
-            <Svg height="30" width="100%">
+            <Svg height="30" width={screenWidth}>
               {i % 2 === 0 ? (
-                // 右端から下へカーブ
                 <Path
-                  d="M100,0 C100,0 100,30 100,30"
+                  d={`M${screenWidth},0 C${screenWidth},0 ${screenWidth},30 ${screenWidth},30`}
                   stroke="#4CAF50"
                   strokeWidth="4"
                   fill="none"
                 />
               ) : (
-                // 左端から下へカーブ
                 <Path
-                  d="M0,0 C0,0 0,30 0,30"
+                  d={`M0,0 C0,0 0,30 0,30`}
                   stroke="#4CAF50"
                   strokeWidth="4"
                   fill="none"
@@ -72,18 +72,32 @@ const SegmentedSeekBar = ({ duration, position, onSeek }) => {
 };
 
 export default function App() {
+  const videoRef = useRef<Video>(null);
+  const [duration, setDuration] = useState(1);
   const [position, setPosition] = useState(0);
-  const duration = 4000; // 例: 4000秒の動画
+
+  const handleSeek = (pos: number) => {
+    setPosition(pos);
+    videoRef.current?.seek(pos);
+  };
 
   return (
-    <View style={{ flex: 1, justifyContent: "center", padding: 20 }}>
-      <Text style={{ marginBottom: 20 }}>
-        現在位置: {Math.floor(position)} / {duration} 秒
+    <View style={styles.container}>
+      <Video
+        ref={videoRef}
+        source={{ uri: "https://www.w3schools.com/html/mov_bbb.mp4" }}
+        style={styles.video}
+        resizeMode="contain"
+        onLoad={(data) => setDuration(data.duration)}
+        onProgress={(data) => setPosition(data.currentTime)}
+      />
+      <Text style={styles.text}>
+        {Math.floor(position)} / {Math.floor(duration)} 秒
       </Text>
       <SegmentedSeekBar
         duration={duration}
         position={position}
-        onSeek={(pos) => setPosition(pos)}
+        onSeek={handleSeek}
       />
     </View>
   );
@@ -91,8 +105,24 @@ export default function App() {
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+    backgroundColor: "#000",
+    justifyContent: "center",
+  },
+  video: {
+    width: "100%",
+    height: 200,
+    backgroundColor: "#222",
+  },
+  text: {
+    color: "#fff",
+    textAlign: "center",
+    marginVertical: 10,
+  },
+  seekContainer: {
     flexDirection: "column",
     gap: 0,
+    marginBottom: 30,
   },
   sliderContainer: {
     flexDirection: "row",
