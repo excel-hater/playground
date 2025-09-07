@@ -6,7 +6,7 @@ const SegmentedSeekBar = ({ duration, position, onSeek }) => {
   const segments = 4;
   const segmentLength = duration / segments;
 
-  // 現在の位置から各セグメントの値を計算
+  // 各セグメントの値 (0〜1) を計算
   const getSegmentValue = (index: number) => {
     const segStart = index * segmentLength;
     const segEnd = (index + 1) * segmentLength;
@@ -15,10 +15,10 @@ const SegmentedSeekBar = ({ duration, position, onSeek }) => {
     return (position - segStart) / segmentLength;
   };
 
-  // ユーザーが動かしたとき
+  // ユーザー操作時に絶対時間に換算
   const handleChange = (value: number, index: number) => {
     const absolutePos = index * segmentLength + value * segmentLength;
-    onSeek(absolutePos); // 動画プレイヤーに渡す
+    onSeek(absolutePos);
   };
 
   return (
@@ -28,7 +28,7 @@ const SegmentedSeekBar = ({ duration, position, onSeek }) => {
           key={i}
           style={[
             styles.sliderContainer,
-            i % 2 === 1 ? { transform: [{ rotate: "180deg" }] } : null, // 偶数/奇数で逆向き
+            i % 2 === 1 ? { transform: [{ rotate: "180deg" }] } : null,
           ]}
         >
           <Slider
@@ -53,7 +53,9 @@ export default function App() {
 
   return (
     <View style={{ flex: 1, justifyContent: "center", padding: 20 }}>
-      <Text>現在位置: {Math.floor(position)} / {duration} 秒</Text>
+      <Text style={{ marginBottom: 20 }}>
+        現在位置: {Math.floor(position)} / {duration} 秒
+      </Text>
       <SegmentedSeekBar
         duration={duration}
         position={position}
@@ -66,8 +68,7 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flexDirection: "column",
-    alignItems: "stretch",
-    gap: 8,
+    gap: 10,
   },
   sliderContainer: {
     flexDirection: "row",
